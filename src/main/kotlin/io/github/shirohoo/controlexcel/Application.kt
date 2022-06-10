@@ -15,9 +15,7 @@ fun main(args: Array<String>) {
 }
 
 @Component
-class Initializer(
-    private val repository: DummyJpaRepository
-) : CommandLineRunner {
+class Initializer(private val repository: DummyJpaRepository) : CommandLineRunner {
     override fun run(vararg args: String?) {
         val dummies = (1..1_000).map { Dummy(name = "dummy${it}") }.toList()
         repository.saveAll(dummies)
