@@ -15,10 +15,9 @@ import java.io.File
 import kotlin.reflect.KClass
 import kotlin.reflect.full.createInstance
 
-class PlatformConverter<T : Any>(
-    private val type: KClass<T>
-) {
+class PlatformConverter<T : Any>(private val type: KClass<T>) {
     private val declaredFields = type.java.declaredFields
+    
     fun convertToEntity(excel: File): List<T> {
         require(excel.extension == "xlsx") {
             "The file must have the extension '.xlsx'. current: ${excel.extension}"
