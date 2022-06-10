@@ -18,28 +18,30 @@ import kotlin.reflect.full.createInstance
 class PlatformConverter<T : Any>(
     private val type: KClass<T>
 ) {
+    private val declaredFields = type.java.declaredFields
     fun convertToEntity(excel: File): List<T> {
         require(excel.extension == "xlsx") {
             "The file must have the extension '.xlsx'. current: ${excel.extension}"
         }
+
         return excel.inputStream()
             .let(::XSSFWorkbook)
             .use { it.getSheetAt(0).let(::dataBind) }
     }
 
-    private fun dataBind(sheet: XSSFSheet) = sheet.drop(1)
-        .map { row ->
-            val declaredFields = type.java.declaredFields
-
-            val instance: T = type.createInstance()
-            for ((idx, field) in declaredFields.withIndex()) {
-                field.isAccessible = true
-                val cell = row.getCell(idx)
-                val cellValue = valueOf(cell)
-                field.set(instance, cellValue)
+    private fun dataBind(sheet: XSSFSheet): List<T> {
+        val excludeTitle = 1
+        return sheet.drop(excludeTitle).map { row ->
+            type.createInstance().apply {
+                for ((idx, field) in declaredFields.withIndex()) {
+                    field.isAccessible = true
+                    val cell = row.getCell(idx)
+                    val cellValue = valueOf(cell)
+                    field.set(this, cellValue)
+                }
             }
-            instance
         }
+    }
 
     private fun valueOf(cell: Cell) = when (cell.cellType) {
         STRING -> cell.stringCellValue
@@ -56,16 +58,17 @@ class PlatformConverter<T : Any>(
         return ByteArrayOutputStream().use {
             val wb = XSSFWorkbook()
             val sheet = wb.createSheet()
-            val declaredFields = type.java.declaredFields
 
-            val columnRow = sheet.createRow(0)
-            for ((idx, field) in declaredFields.withIndex()) {
-                val cell = columnRow.createCell(idx)
-                cell.setCellValue(field.name)
+            sheet.createRow(0).apply {
+                for ((idx, field) in declaredFields.withIndex()) {
+                    val cell = this.createCell(idx)
+                    cell.setCellValue(field.name)
+                }
             }
 
             for ((rowIdx, entity) in entities.withIndex()) {
-                val row = sheet.createRow(rowIdx + 1)
+                val excludeTitle = rowIdx + 1
+                val row = sheet.createRow(excludeTitle)
                 for ((cellIdx, field) in declaredFields.withIndex()) {
                     field.isAccessible = true
                     val cell = row.createCell(cellIdx)
@@ -74,8 +77,8 @@ class PlatformConverter<T : Any>(
                 }
             }
             wb.write(it)
+            wb.close()
             it.toByteArray()
         }
     }
 }
-
