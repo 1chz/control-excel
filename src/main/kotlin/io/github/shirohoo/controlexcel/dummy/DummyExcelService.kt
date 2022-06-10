@@ -6,9 +6,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
-class DummyExcelService(
-    private val repository: DummyJpaRepository,
-) : ExcelService<Dummy> {
+class DummyExcelService(private val repository: DummyJpaRepository) : ExcelService<Dummy> {
     private val converter: PlatformConverter<Dummy> = PlatformConverter(Dummy::class)
 
     override fun upload(excel: File): List<Dummy> {
