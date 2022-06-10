@@ -5,9 +5,7 @@ import org.springframework.web.bind.annotation.ResponseBody
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-class DummyExcelController(
-    private val service: DummyExcelService
-) {
+class DummyExcelController(private val service: DummyExcelService) {
     @ResponseBody
     @GetMapping(
         value = ["/api/v1/excel"],
